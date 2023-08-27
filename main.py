@@ -5,10 +5,14 @@ import spacy
 
 from data3 import data
 
+from memolon import memo
+list_for_word_indetif = []
+for item in memo:
+    list_for_word_indetif.append(item['word'])
+
 nlp = spacy.load("en_core_web_sm")
 
-
-def lexicon_search():
+def lexicon_search1(): #NRC-35%
     no_examples = 0
     got_right = 0
     neutrals = 0
@@ -51,4 +55,56 @@ def lexicon_search():
     print(f"accuracy if we just assumed every utterance was neutral: {comparison}%")
 
 
-lexicon_search()
+def lexicon_search2(): #MEmoLon- toate pozitive...
+    no_examples = 0
+    got_right = 0
+    neutrals = 0
+    dialogue_index = 1
+    for item in data:
+        dialogue = item["utterances"]
+        ac_emotions = item['emotions']
+
+        print(f"Dialogue no.{dialogue_index}")
+        dialogue_index += 1
+        utterance_index = 0
+
+        for utterance in dialogue:
+            print(utterance)
+            utterance = nlp(utterance)
+            lemmatized_tokens = []
+            joy = 0
+            anger = 0
+            sadness = 0
+            fear = 0
+            disgust = 0
+            for token in utterance:
+                token = token.lemma_
+                lemmatized_tokens.append(token)
+                if token in list_for_word_indetif:
+                    word_dict = memo[list_for_word_indetif.index(token)]
+                    joy += float(word_dict['joy'])
+                    anger += float(word_dict['anger'])
+                    sadness += float(word_dict['sadness'])
+                    fear += float(word_dict['fear'])
+                    disgust += float(word_dict['disgust'])
+            sum = joy+anger+sadness+fear+disgust
+            maxemo = max(joy,anger,sadness,fear,disgust)
+            if(maxemo == joy):
+                print("joy")
+            if (maxemo == anger):
+                print("anger")
+            if (maxemo == sadness):
+                print("sadness")
+            if (maxemo == fear):
+                print("fear")
+            if (maxemo == disgust):
+                print("disgust")
+            print(f"actual emotion: {ac_emotions[utterance_index]}")
+            if sum:
+                ratio = maxemo/sum
+            else:
+                ratio = 0
+            print(f"confidence: {ratio}")
+            print(f"{lemmatized_tokens}\n")
+
+lexicon_search2()
